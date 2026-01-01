@@ -1,0 +1,2 @@
+The files in the subdirectories have been downloaded from https://github.com/scratchfoundation/scratch-blocks/tree/86133f194a0224df578c7d069518eeb2db226d22
+I've also copied the `LICENSE` file because it says something like that I should copy it

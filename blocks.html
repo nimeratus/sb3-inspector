@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>block test</title>
+<link href="blocks.css" rel="stylesheet"/>
+<script src="utils.js"></script>
+<script src="sb3json-2-block.js"></script>
+<script src="gzip.js"></script>
+<script src="messageInit.js"></script>
+<script src="adapter-script-before.js"></script>
+<script src="external/msg/messages.js"></script>
+<script src="external/blocks_vertical/control.js"></script>
+<script src="external/blocks_vertical/data.js"></script>
+<script src="external/blocks_vertical/event.js"></script>
+<script src="external/blocks_vertical/looks.js"></script>
+<script src="external/blocks_vertical/motion.js"></script>
+<script src="external/blocks_vertical/operators.js"></script>
+<script src="external/blocks_vertical/sensing.js"></script>
+<script src="external/blocks_vertical/sound.js"></script>
+<script src="adapter-script-after.js"></script>
+<style>
+.block-area {
+    transform: scale(0.675) translate(0.5px,0.5px);
+    transform-origin: top left;
+    position: relative;
+}
+.block-area>* {
+    position: absolute;
+}
+.block-area-container {
+    overflow: scroll;
+    width: 100%;
+    height: 800px;
+    background-color: lightgray;
+}
+.block-stack:focus-within {
+z-index: 2;
+}
+.shadowed-top-level {
+opacity: 0.5;
+filter: saturate(0.8);
+}
+.shadowed-top-level:hover, .shadowed-top-level:focus-within {
+opacity: 1;
+}
+</style>
+</head>
+<body>
+<input type="file" id="fi"/>
+<select id="sps"></select>
+<div class="block-area-container">
+<div class="block-area"></div>
+</div>
+<script src="blocksHTML-main.js"></script>
+</body>
+</html>

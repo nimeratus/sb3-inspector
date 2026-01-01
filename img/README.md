@@ -1,0 +1,1 @@
+These SVG files were exported from https://scratchblocks.github.io then modified using a text editor
