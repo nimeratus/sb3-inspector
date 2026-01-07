@@ -82,6 +82,7 @@ function createBlockFromJSON(blockJSON) {
     /** @type {Object<string, HTMLElement>} */
     // @ts-expect-error __proto__ has special behaviour in JS
     let input2DOM = {__proto__: null};
+    if(Array.isArray(blockJSON)) return {element: createLiteralInput(blockJSON), input2DOM: null};
     let result = document.createElement("div");
     result.classList.add("block");
     if(!isObject(blockJSON)) {
@@ -217,8 +218,8 @@ function createBlockStackFromJSON(blockId, blocks, blockSet = new Set()) {
     stackElem.classList.add("block-stack");
     let firstBlock = typeof(blockId)==="string" ? blocks[blockId] : null;
     if(isObject(firstBlock)) {
-        let x=Number(firstBlock.x)||Number(firstBlock[4])||0;
-        let y=Number(firstBlock.y)||Number(firstBlock[5])||0;
+        let x=Number(firstBlock.x)||Number(firstBlock[3])||0;
+        let y=Number(firstBlock.y)||Number(firstBlock[4])||0;
         stackElem.style.left = x+"px";
         stackElem.style.top = y+"px";
         stackElem._block_pos_x = x;
@@ -310,6 +311,7 @@ function createLiteralInput(array) {
     inputElem.appendChild(fieldElem);
     let value = String(array[1]);
     fieldElem.innerText=limitTextLength(value,MAX_INPUT_TEXT_LENGTH_TRESHOLD);
+    blockElem.classList.add("block");
     blockElem.classList.add("reporter-block");
     inputElem.classList.add("block-input");
     inputElem.classList.add("block-field-text");
