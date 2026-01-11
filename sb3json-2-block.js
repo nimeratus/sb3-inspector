@@ -6,7 +6,7 @@ let MAX_BLOCK_TEXT_LENGTH_TRESHOLD = 1024;
 function isSubstackInputName(inputName) {
     return typeof(inputName)==="string" && inputName.startsWith("SUBSTACK");
 }
-var blockextensionregexp = /^([a-zA-Z]*)/;
+var blockextensionregexp = /^([a-zA-Z0-9]*)/;
 var extensions=["music","pen","videoSensing","faceSensing","text2speech","translate","makeymakey","microbit","gdxfor","ev3","boost","wedo2"];
 /** @param {string} opcode */
 function getClassForOpcode(opcode) {
@@ -393,3 +393,4 @@ function limitTextLength(text, length) {
     return text;
 
 }
+
