@@ -7,7 +7,7 @@ function isSubstackInputName(inputName) {
     return typeof(inputName)==="string" && inputName.startsWith("SUBSTACK");
 }
 var blockextensionregexp = /^([a-zA-Z]*)/;
-var extensions=["pen","music"];
+var extensions=["music","pen","videoSensing","faceSensing","text2speech","translate","makeymakey","microbit","gdxfor","ev3","boost","wedo2"];
 /** @param {string} opcode */
 function getClassForOpcode(opcode) {
     if(opcode === "procedures_prototype") return "procedures_prototype-block";
@@ -391,4 +391,5 @@ function limitTextLength(text, length) {
         return text.slice(0,length-suffix.length)+suffix;
     }
     return text;
+
 }
