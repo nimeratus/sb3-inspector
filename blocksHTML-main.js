@@ -3,7 +3,9 @@ var fi=document.getElementById("fi");
 /** @type {HTMLSelectElement} */ //@ts-ignore
 var sps=document.getElementById("sps");
 /** @type {HTMLDivElement} */ //@ts-ignore
-var div=document.querySelector(".block-area");
+var normalBlocksDiv=document.getElementById("blocks-normal");
+/** @type {HTMLDivElement} */ //@ts-ignore
+var ghostBlocksDiv=document.getElementById("blocks-ghost");
 /** @type {unknown[]} */
 var sprites=[];
 /** @type {unknown} */
@@ -13,11 +15,12 @@ var variables;
 fi.onchange=async function() {
     if(!fi.files || !fi.files[0]) return;
     try {
-        div.innerHTML="";
+        normalBlocksDiv.innerHTML="";
+        ghostBlocksDiv.innerHTML="";
         sprites = await getSpriteListFromFile(fi.files[0]);
         stage = sprites.find(x=>isObject(x) && x.isStage);
         createSpriteDropdown();
-        showBlocksInSprite(sprites[sps.selectedIndex], stage);
+        showBlocksInSprite(sprites[sps.selectedIndex-1], stage);
     } catch(err) {
         console.error(err);
         alert(err);
@@ -25,7 +28,7 @@ fi.onchange=async function() {
 }
 sps.onchange=function() {
     try {
-        showBlocksInSprite(sprites[sps.selectedIndex], stage);
+        showBlocksInSprite(sprites[sps.selectedIndex-1], stage);
     } catch(err) {
         console.error(err);
         alert(err);
@@ -51,9 +54,8 @@ async function getSpriteListFromFile(file) {
  * @param {unknown} stage
  */
 function showBlocksInSprite(sprite, stage) {
-    let scale=0.675;
-    let minX=0, minY=0;
-    div.innerHTML="";
+    normalBlocksDiv.innerHTML="";
+    ghostBlocksDiv.innerHTML="";
     if(!isObject(sprite) || !isObject(sprite.blocks)) return;
     variables = getDeclaredVariablesForSpriteAndStage(sprite, stage);
     getFieldColor = function(array) {
@@ -70,23 +72,61 @@ function showBlocksInSprite(sprite, stage) {
     };
     let spriteBlockSet = new Set();
     let topLevels = Object.entries(sprite.blocks).filter(x=>isObject(x[1]) && (x[1].topLevel || Array.isArray(x[1]) && x[1].length>3)).map(x=>x[0]);
-    for(let topLevel of topLevels) {
-        let stackElem = createBlockStackFromJSON(topLevel, sprite.blocks, spriteBlockSet);
+    showBlocks(normalBlocksDiv, topLevels, null /* use the positions in the JSON */, sprite.blocks, spriteBlockSet);
+    let ghostRoots = getGhostRoots(sprite.blocks);
+    let positions = {__proto__: null};
+    for(let i=0; i<ghostRoots.length; i++) positions[ghostRoots[i]] = {x: (i%17)*61, y: i*61};
+    showBlocks(ghostBlocksDiv, ghostRoots, positions, sprite.blocks, spriteBlockSet);
+}
+function showBlocks(container, idsToShow, positions, blocks, spriteBlockSet) {
+    let scale=0.675; // should be container's transform:scale()
+    let minX=0, minY=0;
+    for(let id of idsToShow) {
+        let stackElem = createBlockStackFromJSON(id, blocks, spriteBlockSet);
         /** @type {Object<string, unknown>} */ // @ts-ignore the value is an object if the key included in the topLevels list
-        let firstBlock = sprite.blocks[topLevel];
+        let firstBlock = blocks[id];
         if(firstBlock.shadow) {
             stackElem.classList.add("shadowed-top-level");
         }
-        div.appendChild(stackElem);
+
+        let pos = {x: 0, y: 0};
+        if(positions && positions[id]) {
+            pos = positions[id];
+        }
+        else {
+            if(Number.isFinite(firstBlock.x)) pos.x = +firstBlock.x;
+            if(Number.isFinite(firstBlock.y)) pos.y = +firstBlock.y;
+        }
+        if(pos.x<minX) minX=pos.x;
+        if(pos.y<minY) minY=pos.y;
+        stackElem.style.left = pos.x + "px";
+        stackElem.style.top = pos.y + "px";
+
+        container.appendChild(stackElem);
         stackElem.tabIndex=0;
-        if(typeof(stackElem._block_pos_x)==="number" && stackElem._block_pos_x<minX) minX=stackElem._block_pos_x;
-        if(typeof(stackElem._block_pos_y)==="number" && stackElem._block_pos_y<minY) minY=stackElem._block_pos_y;
     }
-    div.style.left=`${Math.ceil(-minX*scale)}px`;
-    div.style.top=`${Math.ceil(-minY*scale)}px`;
+    container.style.left=`${Math.ceil(-minX*scale)}px`;
+    container.style.top=`${Math.ceil(-minY*scale)}px`;
+}
+function getGhostRoots(blocks) {
+    let referenced = new Set();
+    for(let id in blocks) {
+        let block = blocks[id];
+        referenced.add(block.next);
+        if(block.inputs) {
+            for(let name in block.inputs) {
+                referenced.add(block.inputs[name][1]);
+                referenced.add(block.inputs[name][2]);
+            }
+        }
+    }
+    return Object.keys(blocks).filter(id=>!referenced.has(id) && !(blocks[id] && blocks[id].topLevel));
 }
 function createSpriteDropdown() {
     sps.innerHTML = "";
+    let option = document.createElement("option");
+    option.innerText="-- select a sprite --";
+    sps.appendChild(option);
     for(let i=0; i<sprites.length; i++) {
         let option = document.createElement("option");
         let sprite = sprites[i];
@@ -94,7 +134,7 @@ function createSpriteDropdown() {
         option.innerText=`(${i}) ${name}`;
         sps.appendChild(option);
     }
-    if(sprites.length>=2) sps.selectedIndex = 1;
+    sps.selectedIndex = 0;
 }
 /**
  * @param {unknown} sprite
