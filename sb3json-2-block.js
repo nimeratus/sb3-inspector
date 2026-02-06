@@ -195,16 +195,20 @@ function createField(field, fieldName) {
     return fieldElem;
 }
 /** @param {unknown} blockId */
-function createBlockReference(blockId) {
+function createBlockReference(blockId, options) {
     var a=document.createElement("a");
-    a.innerText=limitTextLength(String(blockId), MAX_BLOCK_TEXT_LENGTH_TRESHOLD);
+    a.innerText=limitTextLength("\u2192\u00a0"+String(blockId), MAX_BLOCK_TEXT_LENGTH_TRESHOLD);
     a.classList.add("block-reference");
     if(typeof(blockId) === "string") a.href="#block-"+blockId;
     var span=document.createElement("span");
     span.classList.add("block");
     span.classList.add("replacement-block");
-    span.innerHTML = "&rarr;&nbsp;";
     span.appendChild(a);
+    if(options && options.missingBlock) {
+        a.removeAttribute("href");
+        span.classList.add("invalid-block-reference");
+        a.title = "couldn't find block with this ID";
+    }
     return span;
 }
 /**
@@ -246,7 +250,9 @@ function createBlockStackFromJSON(blockId, blocks, blockSet = new Set()) {
     }
     if(nextBlockId) {
         if(Array.isArray(nextBlockId) && ("1" in nextBlockId)) stackElem.appendChild(createLiteralInput(nextBlockId));
-        else stackElem.appendChild(createBlockReference(nextBlockId));
+        else {
+            stackElem.appendChild(createBlockReference(nextBlockId, {missingBlock: true}));
+        }
     }
     return stackElem;
 }

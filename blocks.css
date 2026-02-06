@@ -66,7 +66,11 @@
     padding: 0px;
 }
 .stack-block>.block-input:first-child, .C-block-row>.block-input:first-child {
-    margin-left: 32px;
+    margin-left: 40px;
+}
+/* custom block that starts with an input that has an id-hash that is hidden */
+.stack-block>.block-input:not(:not([hidden])~*), .C-block-row>.block-input:not(:not([hidden])~*) {
+    margin-left: 40px;
 }
 .stack-block>:not(.block-input):first-child, .C-block-row>:not(.block-input):first-child {
     min-width: 32px;
@@ -429,6 +433,12 @@ a.block-reference:active {
 }
 a.block-reference:visited {
     text-decoration-color: black;
+}
+.invalid-block-reference a.block-reference {
+    text-decoration: none;
+    cursor: inherit;
+    background-color: #cc0000;
+    color: white;
 }
 .block:target, .shadow-block:target {
     outline: 2px solid black;
