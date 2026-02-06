@@ -44,6 +44,14 @@ filter: saturate(0.8);
 .shadowed-top-level:hover, .shadowed-top-level:focus-within {
 opacity: 1;
 }
+.block-stack::before {
+content: "";
+position: absolute;
+top: -5px;
+width: 20px;
+height: 8px;
+background-color: white;
+}
 </style>
 </head>
 <body>
@@ -65,4 +73,5 @@ unreferenced ("ghost") blocks:
 </p>
 <script src="blocksHTML-main.js"></script>
 </body>
+
 </html>
