@@ -67,15 +67,21 @@ function getBlockShapeInfo(blockJSON) {
     // for blocks with unknown opcode fall back to just listing the JSON components (opcode, fields, inputs)
     /** @type {BlockComponent[]} */
     let arr=[{text: opcode, type: "label"}];
+    let shape="block";
     for(let fieldName of (isObject(blockJSON.fields) ? Object.keys(blockJSON.fields) : [])) {
         arr.push({type: "label", text: fieldName});
         arr.push({type: "input", inputName: fieldName, inputType: inputTypes.o});
     }
     for(let inputName of (isObject(blockJSON.inputs) ? Object.keys(blockJSON.inputs) : [])) {
         arr.push({type: "label", text: inputName});
-        arr.push({type: "input", inputName: inputName, inputType: inputTypes.o});
+        if(isSubstackInputName(inputName)) {
+            arr.push({type: "input", inputName: inputName, inputType: inputTypes.C});
+            shape="C-block";
+        } else {
+            arr.push({type: "input", inputName: inputName, inputType: inputTypes.o});
+        }
     }
-    return {text: arr, shape: "block"};
+    return {text: arr, shape: shape};
 }
 /** @param {unknown} blockJSON */
 function createBlockFromJSON(blockJSON) {
@@ -198,6 +204,7 @@ function createField(field, fieldName) {
 function createBlockReference(blockId, options) {
     var a=document.createElement("a");
     a.innerText=limitTextLength("\u2192\u00a0"+String(blockId), MAX_BLOCK_TEXT_LENGTH_TRESHOLD);
+    a.setAttribute("data-id", blockId);
     a.classList.add("block-reference");
     if(typeof(blockId) === "string") a.href="#block-"+blockId;
     var span=document.createElement("span");
