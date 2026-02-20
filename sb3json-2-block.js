@@ -187,14 +187,22 @@ function createBlockFromJSON(blockJSON) {
     if(!hasAdditionalInputs) additionalInputShower.remove();
     return {element: result, input2DOM};
 }
+function val2code(value) {
+    return typeof(value)==="undefined"?"undefined":JSON.stringify(value);
+}
 /** 
  * @param {unknown[]} field
  * @param {string} fieldName
  */
 function createField(field, fieldName) {
     let fieldElem = document.createElement("span");
+    let value=field[0];
+    if(typeof(value)!="string") {
+        fieldElem = document.createElement("code");
+        value=val2code(value);
+    }
     fieldElem.className="block-field";
-    fieldElem.innerText=limitTextLength(String(field[0]), MAX_INPUT_TEXT_LENGTH_TRESHOLD);
+    fieldElem.innerText=limitTextLength(value, MAX_INPUT_TEXT_LENGTH_TRESHOLD);
     let fieldClassName = getFieldColor([fieldName, ...field]);
     if(fieldClassName) fieldElem.classList.add(fieldClassName);
     if(typeof(field[1])==="string" && shouldAddIdHash([fieldName, ...field])) fieldElem.appendChild(createIdHash(field[1]));
@@ -320,9 +328,13 @@ function createLiteralInput(array) {
     let blockElem=document.createElement("span");
     let inputElem=document.createElement("span");
     let fieldElem=document.createElement("span");
+    let value = array[1];
+    if(typeof(value)!="string") {
+        fieldElem=document.createElement("code");
+        value=val2code(value);
+    }
     blockElem.appendChild(inputElem);
     inputElem.appendChild(fieldElem);
-    let value = String(array[1]);
     fieldElem.innerText=limitTextLength(value,MAX_INPUT_TEXT_LENGTH_TRESHOLD);
     blockElem.classList.add("block");
     blockElem.classList.add("reporter-block");
