@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>block test</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <link href="blocks.css" rel="stylesheet"/>
 <script src="utils.js"></script>
 <script src="sb3json-2-block.js"></script>
@@ -65,10 +66,13 @@ margin: 1.5em;
 </style>
 </head>
 <body>
-<p style="position: sticky; top: 0; background-color: inherit; z-index: 1000;">
+<div style="position: sticky; top: 0; background-color: #fff8; z-index: 1000;">
 <input type="file" id="fi"/>
 <select id="sps"></select>
-</p>
+<details><summary>JSON</summary>
+<textarea style="width: 100%; resize: vertical; height: 10lh; box-sizing: border-box;" id="jsontxt"></textarea>
+</details>
+</div>
 <p>
 normal blocks:
 <div class="block-area-container">
@@ -81,7 +85,7 @@ unreferenced ("ghost") blocks:
 <div class="block-area" id="blocks-ghost"></div>
 </div>
 </p>
-<script src="blocksHTML-main.js"></script>
+<script src="blocksHTML-main.js?v=20261020"></script>
 </body>
 
 </html>
