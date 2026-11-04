@@ -112,7 +112,7 @@ function showBlocksInSprite(sprite, stage) {
     let spriteBlockSet = new Set();
     let topLevels = Object.entries(sprite.blocks).filter(x=>isTopLevelBlock(x[1])).map(x=>x[0]);
     showBlocks(normalBlocksDiv, topLevels, null /* use the positions in the JSON */, sprite.blocks, spriteBlockSet);
-    let ghostRoots = [...getRoots(sprite.blocks)].filter(x=>!spriteBlockSet.has(x));
+    let ghostRoots = getRoots(sprite.blocks).filter(x=>!spriteBlockSet.has(x));
     /** @type {Record<string, {x:number,y:number}?>} */
     let positions = {__proto__: null};
     for(let i=0; i<ghostRoots.length; i++) positions[ghostRoots[i]] = {x: (i%17)*61, y: i*61};
@@ -198,7 +198,7 @@ function getRoots(blocks) {
     for(let id in blocks_to_roots) {
         roots.add(getRootOf(id));
     }
-    return roots;
+    return Object.keys(blocks).filter(x=>roots.has(x));
 }
 /**
  * @param {unknown} block
