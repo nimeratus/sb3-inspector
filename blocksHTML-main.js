@@ -71,14 +71,19 @@ function showBlocksInSprite(sprite, stage) {
         return null;
     };
     let spriteBlockSet = new Set();
-    let topLevels = Object.entries(sprite.blocks).filter(x=>isObject(x[1]) && (x[1].topLevel || Array.isArray(x[1]) && x[1].length>3)).map(x=>x[0]);
-    showBlocks(normalBlocksDiv, topLevels, null /* use the positions in the JSON */, sprite.blocks, spriteBlockSet);
+    let topLevels = Object.entries(sprite.blocks).filter(x=>isTopLevelBlock(x[1])).map(x=>x[0]);
+    showBlocks(normalBlocksDiv, topLevels, sprite.blocks, spriteBlockSet);
     let ghostRoots = getGhostRoots(sprite.blocks);
-    let positions = {__proto__: null};
-    for(let i=0; i<ghostRoots.length; i++) positions[ghostRoots[i]] = {x: (i%17)*61, y: i*61};
-    showBlocks(ghostBlocksDiv, ghostRoots, positions, sprite.blocks, spriteBlockSet);
+    showBlocks(ghostBlocksDiv, ghostRoots, sprite.blocks, spriteBlockSet, true);
 }
-function showBlocks(container, idsToShow, positions, blocks, spriteBlockSet) {
+/**
+ * @param {HTMLElement} container
+ * @param {string[]} idsToShow
+ * @param {Object<string,unknown>} blocks
+ * @param {Set<string>} spriteBlockSet
+ * @param {boolean} [ignorePositions]
+ */
+function showBlocks(container, idsToShow, blocks, spriteBlockSet, ignorePositions) {
     let scale=0.675; // should be container's transform:scale()
     let minX=0, minY=0;
     for(let id of idsToShow) {
@@ -89,38 +94,52 @@ function showBlocks(container, idsToShow, positions, blocks, spriteBlockSet) {
             stackElem.classList.add("shadowed-top-level");
         }
 
-        let pos = {x: 0, y: 0};
-        if(positions && positions[id]) {
-            pos = positions[id];
+        if(!ignorePositions) {
+            let pos = {x: 0, y: 0};
+            if(Number.isFinite(firstBlock.x)) pos.x = Number(firstBlock.x);
+            if(Number.isFinite(firstBlock.y)) pos.y = Number(firstBlock.y);
+
+            if(pos.x<minX) minX=pos.x;
+            if(pos.y<minY) minY=pos.y;
+            stackElem.style.left = pos.x + "px";
+            stackElem.style.top = pos.y + "px";
         }
-        else {
-            if(Number.isFinite(firstBlock.x)) pos.x = +firstBlock.x;
-            if(Number.isFinite(firstBlock.y)) pos.y = +firstBlock.y;
-        }
-        if(pos.x<minX) minX=pos.x;
-        if(pos.y<minY) minY=pos.y;
-        stackElem.style.left = pos.x + "px";
-        stackElem.style.top = pos.y + "px";
 
         container.appendChild(stackElem);
         stackElem.tabIndex=0;
     }
-    container.style.left=`${Math.ceil(-minX*scale)}px`;
-    container.style.top=`${Math.ceil(-minY*scale)}px`;
+    if(!ignorePositions) {
+        container.style.left=`${Math.ceil(-minX*scale)}px`;
+        container.style.top=`${Math.ceil(-minY*scale)}px`;
+    }
 }
+/**
+ * @param {Object<string,unknown>} blocks
+ */
 function getGhostRoots(blocks) {
     let referenced = new Set();
     for(let id in blocks) {
         let block = blocks[id];
+        if(!isObject(block)) continue;
         referenced.add(block.next);
-        if(block.inputs) {
+        if(isObject(block.inputs)) {
             for(let name in block.inputs) {
+                if(!Array.isArray(block.inputs[name])) continue;
                 referenced.add(block.inputs[name][1]);
                 referenced.add(block.inputs[name][2]);
             }
         }
     }
-    return Object.keys(blocks).filter(id=>!referenced.has(id) && !(blocks[id] && (blocks[id].topLevel || (Array.isArray(blocks[id]) && blocks[id].length>3))));
+    return Object.keys(blocks).filter(id => !referenced.has(id) && !isTopLevelBlock(blocks[id]));
+}
+/**
+ * @param {unknown} block 
+ */
+function isTopLevelBlock(block) {
+    if(!isObject(block)) return false;
+    if(block.topLevel) return true;
+    if(Array.isArray(block) && block.length>3) return true;
+    return false;
 }
 function createSpriteDropdown() {
     sps.innerHTML = "";
@@ -143,8 +162,8 @@ function createSpriteDropdown() {
  * @returns {Object<string, Variable>}
  */
 function getDeclaredVariablesForSpriteAndStage(sprite, stage) {
-    /** @type {Object<string, Variable>} */ // @ts-expect-error __proto__ has special behaviour in JS
-    let variables = {__proto__: null};
+    /** @type {Object<string, Variable>} */
+    let variables = Object.create(null);
     if(isObject(stage) && isObject(stage.broadcasts)) {
         for(let varId in stage.broadcasts) {
             let varObject = stage.broadcasts[varId];
@@ -188,4 +207,44 @@ function getDeclaredVariablesForSpriteAndStage(sprite, stage) {
         }
     }
     return variables;
+}
+
+
+document.addEventListener("click",handleBlockReferenceClick);
+/**
+ * @param {PointerEvent} event
+ */
+function handleBlockReferenceClick(event) {
+    if(event.target && event.target instanceof HTMLAnchorElement && event.target.classList.contains("block-reference") && event.target.href) {
+        event.preventDefault();
+        let blockId = event.target.getAttribute("data-id");
+        let blockElem=document.getElementById("block-"+blockId);
+        if(blockElem) {
+            highlightBlockElem(blockElem);
+        }
+    }
+}
+
+/**
+ * @param {HTMLElement} blockElem
+ */
+function highlightBlockElem(blockElem) {
+    /** @type {Element|null} */
+    let elem=blockElem;
+    while(elem) {
+        if(elem.matches("input.block-additional-input-shower")) {
+            // @ts-ignore: if it matches the CSS selector then it is an input element
+            elem.checked=true;
+        }
+        elem = elem.previousElementSibling || elem.parentElement;
+    }
+    blockElem.classList.add("block-highlighted");
+    blockElem.setAttribute("tabindex", "0");
+    blockElem.focus();
+    blockElem.scrollIntoView({block: "center", inline: "center"});
+    const unhighlight = function() {
+        blockElem.classList.remove("block-highlighted");
+        blockElem.removeAttribute("tabindex");
+    };
+    blockElem.addEventListener("blur",unhighlight,{once:true});
 }

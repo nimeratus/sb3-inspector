@@ -262,9 +262,6 @@
     --block-fill-alt: #b2b2b2;
     --block-stroke: #909090;
 }
-.label-block {
-    --block-fill: #ffffff;
-}
 
 .shadow-block {
     --block-fill: var(--block-fill-alt);
@@ -287,7 +284,7 @@
     min-height: 41px;
 }
 
-.input-block, .shadow-block.input-block {
+.input-block, .shadow-block.input-block, .text-block, .math-block, .note-block {
     --block-fill: white;
     color: #444444;
 }
@@ -370,7 +367,7 @@
 .block-field::after {
     content: "";
     border: 6px solid transparent;
-    border-top-color: white;
+    border-top-color: currentColor;
     border-bottom-width: 0px;
     margin-left: 6px;
 }
@@ -440,7 +437,7 @@ a.block-reference:visited {
     background-color: #cc0000;
     color: white;
 }
-.block:target, .shadow-block:target {
+.block:target, .shadow-block:target, .block-highlighted {
     outline: 2px solid black;
     outline-offset: 2px;
 }
