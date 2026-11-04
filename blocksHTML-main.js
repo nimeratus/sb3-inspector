@@ -110,13 +110,22 @@ function showBlocksInSprite(sprite, stage) {
         return null;
     };
     let spriteBlockSet = new Set();
-    let topLevels = Object.entries(sprite.blocks).filter(x=>isObject(x[1]) && (x[1].topLevel || Array.isArray(x[1]) && x[1].length>3)).map(x=>x[0]);
+    let topLevels = Object.entries(sprite.blocks).filter(x=>isTopLevelBlock(x[1])).map(x=>x[0]);
     showBlocks(normalBlocksDiv, topLevels, null /* use the positions in the JSON */, sprite.blocks, spriteBlockSet);
-    let ghostRoots = getGhostRoots(sprite.blocks);
+    let ghostRoots = [...getRoots(sprite.blocks)].filter(x=>!spriteBlockSet.has(x));
     /** @type {Record<string, {x:number,y:number}?>} */
     let positions = {__proto__: null};
     for(let i=0; i<ghostRoots.length; i++) positions[ghostRoots[i]] = {x: (i%17)*61, y: i*61};
     showBlocks(ghostBlocksDiv, ghostRoots, positions, sprite.blocks, spriteBlockSet);
+}
+/**
+ * @param {unknown} block 
+ */
+function isTopLevelBlock(block) {
+    if(!isObject(block)) return false;
+    if(block.topLevel) return true;
+    if(Array.isArray(block) && block.length>3) return true;
+    return false;
 }
 /**
  * @param {HTMLElement} container
@@ -165,21 +174,47 @@ function showBlocks(container, idsToShow, positions, blocks, spriteBlockSet) {
 /** 
  * @param {Object<string,unknown>} blocks
  */
-function getGhostRoots(blocks) {
-    let referenced = new Set();
+function getRoots(blocks) {
+    /** @type {Record<string,string>} */
+    let blocks_to_roots = Object.create(null);
+    function getRootOf(/** @type {string} */ id) {
+        /** @type {string} */
+        let root = id;
+        while((root in blocks_to_roots) && blocks_to_roots[root]!==root) {
+            root = blocks_to_roots[root];
+        }
+        blocks_to_roots[id]=root;
+        return root;
+    }
     for(let id in blocks) {
+        let root = getRootOf(id);
         let block = blocks[id];
-        if(!isObject(block)) continue;
-        referenced.add(block.next);
-        if(isObject(block.inputs)) {
-            for(let name in block.inputs) {
-                if(!Array.isArray(block.inputs[name])) continue;
-                referenced.add(block.inputs[name][1]);
-                referenced.add(block.inputs[name][2]);
+        for(let refId of descendantBlockIDs(block)) {
+            blocks_to_roots[refId]=root;
+        }
+    }
+    /** @type {Set<string>} */
+    let roots = new Set();
+    for(let id in blocks_to_roots) {
+        roots.add(getRootOf(id));
+    }
+    return roots;
+}
+/**
+ * @param {unknown} block
+ */
+function* descendantBlockIDs(block) {
+    if(!isObject(block) || Array.isArray(block)) return;
+    if(typeof(block.next)==="string") yield block.next;
+    if(isObject(block.inputs)) {
+        for(let name in block.inputs) {
+            let inputArr = block.inputs[name];
+            if(isObject(inputArr)) {
+                if(typeof inputArr[1] === "string") yield inputArr[1];
+                if(typeof inputArr[2] === "string") yield inputArr[2];
             }
         }
     }
-    return Object.keys(blocks).filter(id=>!referenced.has(id) && !(isObject(blocks[id]) && (blocks[id].topLevel || (Array.isArray(blocks[id]) && blocks[id].length>3))));
 }
 function createSpriteDropdown() {
     sps.innerHTML = "";
