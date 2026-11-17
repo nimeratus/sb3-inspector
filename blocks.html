@@ -28,14 +28,14 @@
 .block-area>* {
     position: absolute;
 }
+.block-stack:focus-within {
+    z-index: 2;
+}
 .block-area-container {
     overflow: scroll;
     width: 100%;
     height: 800px;
     background-color: lightgray;
-}
-.block-stack:focus-within {
-z-index: 2;
 }
 .shadowed-top-level {
 opacity: 0.5;
@@ -47,11 +47,22 @@ opacity: 1;
 </style>
 </head>
 <body>
+<p style="position: sticky; top: 0; background-color: inherit; z-index: 1000;">
 <input type="file" id="fi"/>
 <select id="sps"></select>
+</p>
+<p>
+normal blocks:
 <div class="block-area-container">
-<div class="block-area"></div>
+<div class="block-area" id="blocks-normal"></div>
 </div>
+</p>
+<p>
+unreferenced ("ghost") blocks:
+<div class="block-area-container">
+<div class="block-area" id="blocks-ghost"></div>
+</div>
+</p>
 <script src="blocksHTML-main.js"></script>
 </body>
 </html>
