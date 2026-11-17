@@ -120,7 +120,7 @@ function getGhostRoots(blocks) {
             }
         }
     }
-    return Object.keys(blocks).filter(id=>!referenced.has(id) && !(blocks[id] && blocks[id].topLevel));
+    return Object.keys(blocks).filter(id=>!referenced.has(id) && !(blocks[id] && (blocks[id].topLevel || (Array.isArray(blocks[id]) && blocks[id].length>3))));
 }
 function createSpriteDropdown() {
     sps.innerHTML = "";
