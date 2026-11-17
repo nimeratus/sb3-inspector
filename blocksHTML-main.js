@@ -2,29 +2,58 @@
 var fi=document.getElementById("fi");
 /** @type {HTMLSelectElement} */ //@ts-ignore
 var sps=document.getElementById("sps");
+var jsontxt=document.getElementById("jsontxt");
 /** @type {HTMLDivElement} */ //@ts-ignore
 var normalBlocksDiv=document.getElementById("blocks-normal");
 /** @type {HTMLDivElement} */ //@ts-ignore
 var ghostBlocksDiv=document.getElementById("blocks-ghost");
 /** @type {unknown[]} */
 var sprites=[];
+/** @type {string} */
+var displayedJSON;
 /** @type {unknown} */
 var stage=null;
 /** @type {Object<string, Variable>} */
 var variables;
+function setDisplayedJSON(text) {
+displayedJSON=text;
+if(jsontxt.parentElement.open) jsontxt.value=text;
+}
 fi.onchange=async function() {
     if(!fi.files || !fi.files[0]) return;
     try {
         normalBlocksDiv.innerHTML="";
         ghostBlocksDiv.innerHTML="";
-        sprites = await getSpriteListFromFile(fi.files[0]);
+        let jsonText=await getProjectJSONTextFromFile(fi.files[0]);
+        setDisplayedJSON(jsonText);
+        sprites = getSpriteListFromJSONText(jsonText);
         stage = sprites.find(x=>isObject(x) && x.isStage);
         createSpriteDropdown();
+        sps.selectedIndex = 0;
         showBlocksInSprite(sprites[sps.selectedIndex-1], stage);
     } catch(err) {
         console.error(err);
         alert(err);
     }
+}
+jsontxt.onchange=function() {
+    if(jsontxt.value.length==0) return;
+    try {
+        setDisplayedJSON(this.value);
+        let sel=sps.selectedIndex;
+        sprites = getSpriteListFromJSONText(jsontxt.value);
+        stage = sprites.find(x=>isObject(x) && x.isStage);
+        createSpriteDropdown();
+        sps.selectedIndex = sel;
+        showBlocksInSprite(sprites[sps.selectedIndex-1], stage);
+    }
+    catch(err) {
+        console.error(err);
+        alert(err);
+    }
+}
+jsontxt.parentElement.ontoggle=function() {
+    setDisplayedJSON(displayedJSON);
 }
 sps.onchange=function() {
     try {
@@ -35,20 +64,26 @@ sps.onchange=function() {
     }
 }
 /** @param {Blob} file */
-async function getSpriteListFromFile(file) {
-    let sprites = [], spriteOrProject = null;
+async function getProjectJSONTextFromFile(file) {
     if((await file.slice(0,1).text()) == "{") {
-        spriteOrProject = JSON.parse(await file.text());
+        return await file.text();
     }
     else {
         let zip=new Zip(file);
         await zip.loadMetadata();
-        spriteOrProject=JSON.parse(new TextDecoder().decode(await zip.getFileContentAsync(zip.hasFile("project.json")?"project.json":"sprite.json")));
+        let fileName=zip.hasFile("project.json")?"project.json":"sprite.json";
+        let fileContent=await zip.getFileContentAsync(fileName);
+        return new TextDecoder().decode(fileContent);
     }
+}
+/** @param {string} text */
+function getSpriteListFromJSONText(text){
+    let sprites = [], spriteOrProject = JSON.parse(text);
     if(Array.isArray(spriteOrProject.targets)) sprites = spriteOrProject.targets;
     else sprites = [spriteOrProject];
     return sprites;
 }
+
 /** 
  * @param {unknown} sprite
  * @param {unknown} stage
@@ -134,7 +169,6 @@ function createSpriteDropdown() {
         option.innerText=`(${i}) ${name}`;
         sps.appendChild(option);
     }
-    sps.selectedIndex = 0;
 }
 /**
  * @param {unknown} sprite
