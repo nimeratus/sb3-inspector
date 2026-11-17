@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "target": "esnext",
+        "checkJs": true,
+        "strictNullChecks": true,
+        "noImplicitAny": true
+    },
+    "exclude": ["external/"]
+}

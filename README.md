@@ -1,0 +1,1 @@
+this thing tries to render the blocks in an sb3 file even if it contains "hacked blocks" or corrupted blocks
