@@ -86,9 +86,8 @@ function getBlockShapeInfo(blockJSON) {
 /** @param {unknown} blockJSON */
 function createBlockFromJSON(blockJSON) {
     /** @type {Object<string, HTMLElement>} */
-    // @ts-expect-error __proto__ has special behaviour in JS
-    let input2DOM = {__proto__: null};
-    if(Array.isArray(blockJSON)) return {element: createLiteralInput(blockJSON), input2DOM: null};
+    let input2DOM = Object.create(null);
+    if(Array.isArray(blockJSON)) return {element: createLiteralInput(blockJSON), input2DOM};
     let result = document.createElement("div");
     result.classList.add("block");
     if(!isObject(blockJSON)) {
@@ -187,6 +186,9 @@ function createBlockFromJSON(blockJSON) {
     if(!hasAdditionalInputs) additionalInputShower.remove();
     return {element: result, input2DOM};
 }
+/**
+ * @param {unknown} value
+ */
 function val2code(value) {
     return typeof(value)==="undefined"?"undefined":JSON.stringify(value);
 }
@@ -195,11 +197,17 @@ function val2code(value) {
  * @param {string} fieldName
  */
 function createField(field, fieldName) {
-    let fieldElem = document.createElement("span");
-    let value=field[0];
-    if(typeof(value)!="string") {
+    /** @type {HTMLElement} */
+    let fieldElem;
+    /** @type {string} */
+    let value;
+    if(typeof(field[0])==="string") {
+        fieldElem = document.createElement("span");
+        value = field[0];
+    }
+    else {
         fieldElem = document.createElement("code");
-        value=val2code(value);
+        value=val2code(field[0]);
     }
     fieldElem.className="block-field";
     fieldElem.innerText=limitTextLength(value, MAX_INPUT_TEXT_LENGTH_TRESHOLD);
@@ -208,13 +216,18 @@ function createField(field, fieldName) {
     if(typeof(field[1])==="string" && shouldAddIdHash([fieldName, ...field])) fieldElem.appendChild(createIdHash(field[1]));
     return fieldElem;
 }
-/** @param {unknown} blockId */
+/** 
+ * @param {unknown} blockId
+ * @param {{missingBlock?:boolean}} [options]
+ */
 function createBlockReference(blockId, options) {
     var a=document.createElement("a");
     a.innerText=limitTextLength("\u2192\u00a0"+String(blockId), MAX_BLOCK_TEXT_LENGTH_TRESHOLD);
-    a.setAttribute("data-id", blockId);
     a.classList.add("block-reference");
-    if(typeof(blockId) === "string") a.href="#block-"+blockId;
+    if(typeof(blockId) === "string") {
+        a.setAttribute("data-id", blockId);
+        a.href="#block-"+blockId;
+    }
     var span=document.createElement("span");
     span.classList.add("block");
     span.classList.add("replacement-block");
@@ -229,7 +242,7 @@ function createBlockReference(blockId, options) {
 /**
  * @param {unknown} blockId
  * @param {Object<string, unknown>} blocks
- * @param {Set<any>} [blockSet=new Set()]
+ * @param {Set<string>} [blockSet=new Set()]
  */
 function createBlockStackFromJSON(blockId, blocks, blockSet = new Set()) {
     /** @type {HTMLElement & {_block_pos_x?: number, _block_pos_y?: number}} */
@@ -275,6 +288,7 @@ function createBlockStackFromJSON(blockId, blocks, blockSet = new Set()) {
  * @param {Object<string, unknown>} blockJSON
  * @param {Object<string, HTMLElement>} input2DOM
  * @param {Object<string, unknown>} blocks
+ * @param {Set<string>} [blockSet] 
  */
 function fillBlockInputs(blockJSON, input2DOM, blocks, blockSet = new Set()) {
     let inputs = isObject(blockJSON.inputs) ? blockJSON.inputs : {};
@@ -327,11 +341,17 @@ let getFieldColor = function(array) {
 function createLiteralInput(array) {
     let blockElem=document.createElement("span");
     let inputElem=document.createElement("span");
-    let fieldElem=document.createElement("span");
-    let value = array[1];
-    if(typeof(value)!="string") {
+    /** @type {HTMLElement} */
+    let fieldElem;
+    /** @type {string} */
+    let value;
+    if(typeof(array[1])==="string") {
+        fieldElem=document.createElement("span");
+        value=array[1];
+    }
+    else {
         fieldElem=document.createElement("code");
-        value=val2code(value);
+        value=val2code(array[1]);
     }
     blockElem.appendChild(inputElem);
     inputElem.appendChild(fieldElem);
@@ -348,7 +368,7 @@ function createLiteralInput(array) {
         default: blockElem.classList.add("input-block"); break;
     }
     if(array[0]===9) {
-        if(isHexColor(value)) {
+        if(typeof value==="string" && isHexColor(value)) {
             blockElem.style.backgroundColor=value;
             blockElem.style.color=isLightColor(value)?"#000000":"#ffffff";
         } else {

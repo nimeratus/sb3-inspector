@@ -2,7 +2,10 @@
 var fi=document.getElementById("fi");
 /** @type {HTMLSelectElement} */ //@ts-ignore
 var sps=document.getElementById("sps");
+/** @type {HTMLTextAreaElement} */ //@ts-ignore
 var jsontxt=document.getElementById("jsontxt");
+/** @type {HTMLDetailsElement} */ //@ts-ignore
+var jsonhider=document.getElementById("jsonhider");
 /** @type {HTMLDivElement} */ //@ts-ignore
 var normalBlocksDiv=document.getElementById("blocks-normal");
 /** @type {HTMLDivElement} */ //@ts-ignore
@@ -15,9 +18,10 @@ var displayedJSON;
 var stage=null;
 /** @type {Object<string, Variable>} */
 var variables;
+/** @param {string} text */
 function setDisplayedJSON(text) {
-displayedJSON=text;
-if(jsontxt.parentElement.open) jsontxt.value=text;
+    displayedJSON=text;
+    if(jsonhider.open) jsontxt.value=text;
 }
 fi.onchange=async function() {
     if(!fi.files || !fi.files[0]) return;
@@ -39,7 +43,7 @@ fi.onchange=async function() {
 jsontxt.onchange=function() {
     if(jsontxt.value.length==0) return;
     try {
-        setDisplayedJSON(this.value);
+        setDisplayedJSON(jsontxt.value);
         let sel=sps.selectedIndex;
         sprites = getSpriteListFromJSONText(jsontxt.value);
         stage = sprites.find(x=>isObject(x) && x.isStage);
@@ -52,7 +56,7 @@ jsontxt.onchange=function() {
         alert(err);
     }
 }
-jsontxt.parentElement.ontoggle=function() {
+jsonhider.ontoggle=function() {
     setDisplayedJSON(displayedJSON);
 }
 sps.onchange=function() {
@@ -109,17 +113,32 @@ function showBlocksInSprite(sprite, stage) {
     let topLevels = Object.entries(sprite.blocks).filter(x=>isObject(x[1]) && (x[1].topLevel || Array.isArray(x[1]) && x[1].length>3)).map(x=>x[0]);
     showBlocks(normalBlocksDiv, topLevels, null /* use the positions in the JSON */, sprite.blocks, spriteBlockSet);
     let ghostRoots = getGhostRoots(sprite.blocks);
+    /** @type {Record<string, {x:number,y:number}?>} */
     let positions = {__proto__: null};
     for(let i=0; i<ghostRoots.length; i++) positions[ghostRoots[i]] = {x: (i%17)*61, y: i*61};
     showBlocks(ghostBlocksDiv, ghostRoots, positions, sprite.blocks, spriteBlockSet);
 }
+/**
+ * @param {HTMLElement} container
+ * @param {string[]} idsToShow
+ * @param {Object<string,unknown>} blocks
+ * @param {Record<string,{x:number,y:number}?>?} positions
+ * @param {Set<string>} spriteBlockSet
+ */
 function showBlocks(container, idsToShow, positions, blocks, spriteBlockSet) {
     let scale=0.675; // should be container's transform:scale()
     let minX=0, minY=0;
     for(let id of idsToShow) {
+        /** @type {Object<string, unknown>} */
+        let firstBlock;
+        if(isObject(blocks[id])) {
+            firstBlock = blocks[id];
+        } else {
+            console.error("showBlocks(): the idsToShow should only index valid blocks");
+            firstBlock = {};
+        }
+
         let stackElem = createBlockStackFromJSON(id, blocks, spriteBlockSet);
-        /** @type {Object<string, unknown>} */ // @ts-ignore the value is an object if the key included in the topLevels list
-        let firstBlock = blocks[id];
         if(firstBlock.shadow) {
             stackElem.classList.add("shadowed-top-level");
         }
@@ -129,8 +148,8 @@ function showBlocks(container, idsToShow, positions, blocks, spriteBlockSet) {
             pos = positions[id];
         }
         else {
-            if(Number.isFinite(firstBlock.x)) pos.x = +firstBlock.x;
-            if(Number.isFinite(firstBlock.y)) pos.y = +firstBlock.y;
+            if(Number.isFinite(firstBlock.x)) pos.x = Number(firstBlock.x);
+            if(Number.isFinite(firstBlock.y)) pos.y = Number(firstBlock.y);
         }
         if(pos.x<minX) minX=pos.x;
         if(pos.y<minY) minY=pos.y;
@@ -143,19 +162,24 @@ function showBlocks(container, idsToShow, positions, blocks, spriteBlockSet) {
     container.style.left=`${Math.ceil(-minX*scale)}px`;
     container.style.top=`${Math.ceil(-minY*scale)}px`;
 }
+/** 
+ * @param {Object<string,unknown>} blocks
+ */
 function getGhostRoots(blocks) {
     let referenced = new Set();
     for(let id in blocks) {
         let block = blocks[id];
+        if(!isObject(block)) continue;
         referenced.add(block.next);
-        if(block.inputs) {
+        if(isObject(block.inputs)) {
             for(let name in block.inputs) {
+                if(!Array.isArray(block.inputs[name])) continue;
                 referenced.add(block.inputs[name][1]);
                 referenced.add(block.inputs[name][2]);
             }
         }
     }
-    return Object.keys(blocks).filter(id=>!referenced.has(id) && !(blocks[id] && (blocks[id].topLevel || (Array.isArray(blocks[id]) && blocks[id].length>3))));
+    return Object.keys(blocks).filter(id=>!referenced.has(id) && !(isObject(blocks[id]) && (blocks[id].topLevel || (Array.isArray(blocks[id]) && blocks[id].length>3))));
 }
 function createSpriteDropdown() {
     sps.innerHTML = "";
@@ -177,8 +201,8 @@ function createSpriteDropdown() {
  * @returns {Object<string, Variable>}
  */
 function getDeclaredVariablesForSpriteAndStage(sprite, stage) {
-    /** @type {Object<string, Variable>} */ // @ts-expect-error __proto__ has special behaviour in JS
-    let variables = {__proto__: null};
+    /** @type {Object<string, Variable>} */
+    let variables = Object.create(null);
     if(isObject(stage) && isObject(stage.broadcasts)) {
         for(let varId in stage.broadcasts) {
             let varObject = stage.broadcasts[varId];
