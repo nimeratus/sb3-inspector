@@ -13,14 +13,14 @@
     border: 1px solid var(--block-stroke);
     padding: 4px;
     margin: 0px;
+    --block-fill: #444444;
+    --block-fill-alt: #222222;
 }
 .block-stack>*, .C-block-input>* {
     margin-bottom: -1px;
 }
 .block {
-    --block-fill: #444444;
     --block-stroke: black;
-    --block-fill-alt: var(--block-stroke);
 }
 .block>*, .C-block-row>*, .shadow-block>* {
     margin: 0px 4px;
