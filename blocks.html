@@ -44,13 +44,19 @@ filter: saturate(0.8);
 .shadowed-top-level:hover, .shadowed-top-level:focus-within {
 opacity: 1;
 }
-.block-stack::before {
-content: "";
+.numbered-block-area {
+counter-reset: block-stack;
+}
+.numbered-block-area .block-stack {
+counter-increment: block-stack;
+}
+.numbered-block-area .block-stack::before {
+content: counter(block-stack);
 position: absolute;
 top: -5px;
-width: 20px;
-height: 8px;
 background-color: white;
+padding: 0px 2px;
+opacity: 0.5;
 }
 #blocks-ghost>* {
 position: static;
@@ -66,7 +72,7 @@ margin: 1.5em;
 <p>
 normal blocks:
 <div class="block-area-container">
-<div class="block-area" id="blocks-normal"></div>
+<div class="block-area numbered-block-area" id="blocks-normal"></div>
 </div>
 </p>
 <p>
