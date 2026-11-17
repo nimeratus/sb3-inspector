@@ -69,7 +69,7 @@ function showBlocksInSprite(sprite, stage) {
         return null;
     };
     let spriteBlockSet = new Set();
-    let topLevels = Object.entries(sprite.blocks).filter(x=>isObject(x[1]) && x[1].topLevel).map(x=>x[0]);
+    let topLevels = Object.entries(sprite.blocks).filter(x=>isObject(x[1]) && (x[1].topLevel || Array.isArray(x[1]) && x[1].length>3)).map(x=>x[0]);
     for(let topLevel of topLevels) {
         let stackElem = createBlockStackFromJSON(topLevel, sprite.blocks, spriteBlockSet);
         /** @type {Object<string, unknown>} */ // @ts-ignore the value is an object if the key included in the topLevels list
