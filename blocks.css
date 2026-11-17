@@ -20,6 +20,7 @@
 .block {
     --block-fill: #444444;
     --block-stroke: black;
+    --block-fill-alt: var(--block-stroke);
 }
 .block>*, .C-block-row>*, .shadow-block>* {
     margin: 0px 4px;
@@ -186,70 +187,83 @@
     border-image-source: url("img/hat-block-extension.svg");
 }
 
-/** these --block-fill and --block-stroke colors have been extracted from an SVG file exported from https://scratchblocks.github.io */
+/** these --block-fill --block-fill-alt and --block-stroke colors have been extracted from an SVG file exported from https://scratchblocks.github.io */
 .motion-block {
     --block-fill: #4c97ff;
+    --block-fill-alt: #4280d7;
     --block-stroke: #3373cc;
 }
 .looks-block {
     --block-fill: #9966ff;
+    --block-fill-alt: #855cd6;
     --block-stroke: #774dcb;
 }
 .sound-block {
     --block-fill: #cf63cf;
+    --block-fill-alt: #c94fc9;
     --block-stroke: #bd42bd;
 }
 .control-block {
     --block-fill: #ffab19;
+    --block-fill-alt: #ec9c13;
     --block-stroke: #cf8b17;
 }
 .event-block {
     --block-fill: #ffbf00;
+    --block-fill-alt: #e6ac00;
     --block-stroke: #cc9900;
 }
 .sensing-block {
     --block-fill: #5cb1d6;
+    --block-fill-alt: #47a8d1;
     --block-stroke: #2e8eb8;
 }
 .operator-block {
     --block-fill: #59c059;
+    --block-fill-alt: #46b946;
     --block-stroke: #389438;
 }
 .variables-block {
     --block-fill: #ff8c1a;
+    --block-fill-alt: #ff8000;
     --block-stroke: #db6e00;
 }
 .list-block {
     --block-fill: #ff661a;
+    --block-fill-alt: #ff5500;
     --block-stroke: #e64d00;
 }
 .procedures-block {
     --block-fill: #ff6680;
+    --block-fill-alt: #ff4d6a;
     --block-stroke: #ff3355;
 }
 .argument-block {
     --block-fill: #ff6680;
+    --block-fill-alt: #ff4d6a;
     --block-stroke: #ff3355;
 }
 .extension-block {
     --block-fill: #0fbd8c;
+    --block-fill-alt: #0da57a;
     --block-stroke: #0b8e69;
 }
 .obsolete-block {
     --block-fill: #ed4242;
+    --block-fill-alt: #db3333;
     --block-stroke: #ca2b2b;
 }
 .grey-block {
     --block-fill: #bfbfbf;
+    --block-fill-alt: #b2b2b2;
     --block-stroke: #909090;
 }
 .label-block {
     --block-fill: #ffffff;
-    --block-stroke: null;
 }
 
 .shadow-block {
-    --block-fill: var(--block-stroke);
+    --block-fill: var(--block-fill-alt);
     min-width: 41px;
     min-height: 33px;
 }
